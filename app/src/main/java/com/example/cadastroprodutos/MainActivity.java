@@ -11,17 +11,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.cadastroprodutos.database.ProdutoDAO;
 import com.example.cadastroprodutos.modelo.Produto;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-
-    private final int REQUEST_CODE_NOVO_PRODUTO = 1;
-    private final int RESULT_CODE_NOVO_PRODUTO = 10;
-    private final int REQUEST_CODE_EDITAR_PRODUTO = 2;
-    private final int RESULT_CODE_PPRODUTO_EDITADO = 11;
-    private final int RESULT_CODE_PRODUTO_EXCLUIDO = 12;
 
     private ListView listViewProdutos;
     private ArrayAdapter<Produto> adapterProdutos;
@@ -33,13 +28,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         listViewProdutos = findViewById(R.id.listView_produtos);
-        ArrayList<Produto> produtos = new ArrayList<Produto>();
+        definirOnClickListenerListView();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ProdutoDAO produtoDAO = new ProdutoDAO(getBaseContext());
         adapterProdutos = new ArrayAdapter<Produto>(MainActivity.this,
-                android.R.layout.simple_list_item_1, produtos);
+                android.R.layout.simple_list_item_1,
+                produtoDAO.listar());
         listViewProdutos.setAdapter(adapterProdutos);
 
-        definirOnClickListenerListView();
     }
 
     private void definirOnClickListenerListView() {
@@ -49,42 +49,14 @@ public class MainActivity extends AppCompatActivity {
                 Produto produtoClicado = adapterProdutos.getItem(position);
                 Intent intent = new Intent(MainActivity.this, CadastroProdutoActivity.class);
                 intent.putExtra("produtoEdicao", produtoClicado);
-                startActivityForResult(intent, REQUEST_CODE_EDITAR_PRODUTO);
+                startActivity(intent);
             }
         });
     }
 
     public void onClickNovoProduto(View v) {
         Intent intent = new Intent(MainActivity.this, CadastroProdutoActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_NOVO_PRODUTO);
+        startActivity(intent);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_CODE_NOVO_PRODUTO && resultCode == RESULT_CODE_NOVO_PRODUTO) {
-            Produto produto = (Produto) data.getExtras().getSerializable("novoProduto");
-            produto.setId(++id);
-            this.adapterProdutos.add(produto);
-        } else if (requestCode == REQUEST_CODE_EDITAR_PRODUTO && resultCode == RESULT_CODE_PPRODUTO_EDITADO) {
-            Produto produtoEditado = (Produto) data.getExtras().getSerializable("produtoEditado");
-            for (int i = 0; i < adapterProdutos.getCount(); i++) {
-                Produto produto = adapterProdutos.getItem(i);
-                if (produto.getId() == produtoEditado.getId()) {
-                    adapterProdutos.remove(produto);
-                    adapterProdutos.insert(produtoEditado, i);
-                    break;
-                }
-            }
-        } else if (requestCode == REQUEST_CODE_EDITAR_PRODUTO && resultCode == RESULT_CODE_PRODUTO_EXCLUIDO) {
-            Produto produtoExcluido = (Produto) data.getExtras().getSerializable("produtoExcluido");
-            for (int i = 0; i < adapterProdutos.getCount(); i++) {
-                Produto produto = adapterProdutos.getItem(i);
-                if (produto.getId() == produtoExcluido.getId()) {
-                    adapterProdutos.remove(produto);
-                    break;
-                }
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
 }

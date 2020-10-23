@@ -8,17 +8,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.cadastroprodutos.database.ProdutoDAO;
 import com.example.cadastroprodutos.modelo.Produto;
 
 import java.time.LocalDate;
 
 public class CadastroProdutoActivity extends AppCompatActivity {
 
-    private final int RESULT_CODE_NOVO_PRODUTO = 10;
-    private final int RESULT_CODE_PRODUTO_EDITADO = 11;
-    private final int RESULT_CODE_PRODUTO_EXCLUIDO = 12;
-
-    private boolean edicao = false;
     private int id = 0;
 
     @Override
@@ -30,19 +26,18 @@ public class CadastroProdutoActivity extends AppCompatActivity {
 
     public void carregarProduto() {
         Intent intent = getIntent();
-        if (intent != null && intent.getExtras() != null && intent.getExtras().get("produtoEdicao") != null) {
+        if (intent != null && intent.getExtras() != null &&
+                intent.getExtras().get("produtoEdicao") != null) {
             Produto produto = (Produto) intent.getExtras().get("produtoEdicao");
             EditText editTextNome = findViewById(R.id.editText_nome);
             EditText editTextValor = findViewById(R.id.editText_valor);
             editTextNome.setText(produto.getNome());
             editTextValor.setText(String.valueOf(produto.getValor()));
-            edicao = true;
             id = produto.getId();
         }
     }
 
     public void onClickVoltar(View v) {
-
         finish();
     }
 
@@ -54,16 +49,13 @@ public class CadastroProdutoActivity extends AppCompatActivity {
         Float valor = Float.parseFloat(editTextValor.getText().toString());
 
         Produto produto = new Produto(id, nome, valor);
-        Intent intent = new Intent();
-        if (edicao) {
-            intent.putExtra("produtoEditado", produto);
-            setResult(RESULT_CODE_PRODUTO_EDITADO, intent);
+        ProdutoDAO produtoDAO = new ProdutoDAO(getBaseContext());
+        boolean salvou = produtoDAO.salvar(produto);
+        if (salvou) {
+            finish();
         } else {
-            intent.putExtra("novoProduto", produto);
-            setResult(RESULT_CODE_NOVO_PRODUTO, intent);
+            Toast.makeText(CadastroProdutoActivity.this, "Erro ao salvar", Toast.LENGTH_SHORT).show();
         }
-
-        finish();
     }
 
     public void onClickExcluir(View v) {
@@ -74,12 +66,9 @@ public class CadastroProdutoActivity extends AppCompatActivity {
         Float valor = Float.parseFloat(editTextValor.getText().toString());
 
         Produto produto = new Produto(id, nome, valor);
-        Intent intent = new Intent();
-
-        intent.putExtra("produtoExcluido", produto);
-        setResult(RESULT_CODE_PRODUTO_EXCLUIDO, intent);
-
-        Toast.makeText(CadastroProdutoActivity.this, "Produto excluído com sucesso!", Toast.LENGTH_SHORT).show();
+        ProdutoDAO produtoDAO = new ProdutoDAO(getBaseContext());
+        produtoDAO.excluir(produto);
+        Toast.makeText(CadastroProdutoActivity.this, "Produto Excluido com sucesso", Toast.LENGTH_SHORT).show();
         finish();
+        }
     }
-}
